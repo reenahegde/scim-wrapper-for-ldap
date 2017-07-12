@@ -13,6 +13,7 @@ import com.novell.ldap.LDAPSearchResults;
 import ldap.SSL_Connection;
 import scim.entity.Meta;
 import scim.entity.ScimUser;
+import scim.error.ScimResourceInvalid;
 import util.ScimConstants;
 import util.ScimUtils;
 
@@ -130,17 +131,18 @@ public class UserService{
 		} 
 	}
 
-	public static boolean replaceUser(ScimUser user){
+	public static boolean replaceUser(String id, ScimUser user){
+		System.out.println("In replaceUser "+user);
 		LDAPConnection lc = SSL_Connection.getConnection();
 
 		//Get DB user
-		ScimUser dbuser= UserService.getUser(ScimUtils.generateIdForUser(user.getExternalId()));
+		ScimUser dbuser= UserService.getUser(id);
 
 		if(user.getId()!=null && !user.getId().isEmpty() && user.getId()!=dbuser.getId()){
 			//TODO: throw immutability error
+			throw new ScimResourceInvalid();
 		}
 
-		System.out.println("Ldap connection successful, ID: "+user);
 		String dn = ScimUtils.getDNFromExternalId(user.getExternalId());
 
 		LDAPModification[] mod = ScimUtils.pushLdapUser(user, dbuser);

@@ -105,9 +105,9 @@ public class UserEndPoint {
 	 * @param id
 	 * @param response
 	 */
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@RequestMapping(value = "/Users", method = RequestMethod.PUT, produces = "application/scim+json")
-	public void putUser(@RequestParam(value="user") String input) {
+	//@ResponseStatus(HttpStatus.NO_CONTENT)
+	@RequestMapping(value = "/Users/{id}", method = RequestMethod.PUT)
+	public void putUser(@PathVariable("id") String id, @RequestParam(value="user") String input) {
 		System.out.println("\n"+input);
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -125,10 +125,7 @@ public class UserEndPoint {
 			e.getCause();
 		}
 
-		if(user==null || user.getExternalId()==null || user.getExternalId().isEmpty())
-			throw new ScimResourceInvalid();
-
-		boolean updateStatus = UserService.replaceUser(user);
+		boolean updateStatus = UserService.replaceUser(id, user);
 		if(updateStatus){
 			System.out.println(user+" Updated");
 		} else {

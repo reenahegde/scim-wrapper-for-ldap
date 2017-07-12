@@ -34,6 +34,8 @@ public class ScimUser extends BaseScimResourse{
 	public ScimUser() {
 		schemas.add(ScimConstants.SCHEMA_USER);
 		meta = new Meta();
+		emails = new ArrayList<>();
+		phoneNumbers = new ArrayList<>();
 	}
 
 	public String getUserName() {
