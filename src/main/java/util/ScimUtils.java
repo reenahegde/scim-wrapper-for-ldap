@@ -2,17 +2,13 @@ package util;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import com.novell.ldap.LDAPAttribute;
 import com.novell.ldap.LDAPAttributeSet;
-import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
-import com.novell.ldap.LDAPException;
 import com.novell.ldap.LDAPModification;
 
-import ldap.SSL_Connection;
 import scim.entity.Meta;
 import scim.entity.MultiValuedEntity;
 import scim.entity.Name;
@@ -125,13 +121,13 @@ public class ScimUtils {
 		return user;
 	}
 
-	public static String[] getLdapNames(Name name){
+	private static String[] getLdapNames(Name name){
 		String[] names = {name.getGivenName(),name.getMiddleName(),name.getFamilyName(),name.getHonorificPrefix()+" "+name.getGivenName(),name.getFamilyName()+" "+name.getHonorificSuffix()};
 		//String[] names = {name.getFormatted()};
 		return names;
 	}
 
-	public static Name setLdapNames(String[] names){
+	private static Name setLdapNames(String[] names){
 		Name name = new Name();
 		List<String> namesArr = new ArrayList<>();
 		for(String s:names){
@@ -171,6 +167,9 @@ public class ScimUtils {
 		return name;
 	}
 
+	private static String getMetaString(Meta meta){
+		return meta.getVersion()+"~"+meta.getCreated()+"~"+meta.getLastModified()+"~"+meta.getResourceType();
+	}
 	public static LDAPEntry getLdapUserEntry(ScimUser user){
 		LDAPAttributeSet attributeSet = new LDAPAttributeSet();                  
 		attributeSet.add( new LDAPAttribute("objectclass", userObjClass));     
@@ -193,11 +192,10 @@ public class ScimUtils {
 
 		if(null != user.getMeta()){
 			Meta meta = user.getMeta();
-			attributeSet.add( new LDAPAttribute("description",meta.getVersion()+"~"+meta.getCreated()+
-					"~"+meta.getLastModified()+"~"+meta.getResourceType())); 
+			attributeSet.add( new LDAPAttribute("description",getMetaString(meta))); 
 		}
 
-		String  dn  = DN_SUFFIX+ user.getExternalId() + COMMA + CONTAINER_NAME;      
+		String  dn  = getDNFromExternalId(user.getExternalId());      
 		LDAPEntry newEntry = new LDAPEntry( dn, attributeSet );
 
 		return newEntry;
@@ -210,7 +208,7 @@ public class ScimUtils {
 	 * @param oldEntity
 	 * @return true if this entity is to be modified
 	 */
-	public static boolean isModify(List<MultiValuedEntity> entity, List<MultiValuedEntity> oldEntity){
+	private static boolean isModify(List<MultiValuedEntity> entity, List<MultiValuedEntity> oldEntity){
 		boolean isModify = false;
 		if(entity != null && !entity.get(0).getValue().isEmpty()) {
 			if(oldEntity != null && !oldEntity.get(0).getValue().isEmpty()) {
@@ -232,7 +230,7 @@ public class ScimUtils {
 	 * @param oldEntity
 	 * @return true if this entity is to be modified
 	 */
-	public static boolean isModify(String entity, String oldEntity){
+	private static boolean isModify(String entity, String oldEntity){
 		boolean isModify = false;
 		if(entity != null && !entity.isEmpty()) {
 			if(oldEntity != null && !oldEntity.isEmpty()) {
@@ -247,13 +245,105 @@ public class ScimUtils {
 		return isModify;
 	}
 
+	private static List<LDAPModification> LDAPModHelper(int op, String key, String value, List<LDAPModification> modList){
+		if(value != null && !value.isEmpty()){
+			LDAPAttribute attribute = new LDAPAttribute(key, value);
+			modList.add(new LDAPModification(op, attribute));
+		}
+		return modList;
+	}
+	/**
+	 * pushLdapUser
+	 * Deletes all attributes and builds new ones
+	 * @param user
+	 * @param oldUser
+	 * @return
+	 */
+	public static LDAPModification[] pushLdapUser(ScimUser user, ScimUser oldUser){
+		List<LDAPModification> modList = new ArrayList<LDAPModification>();
+
+		//Email remove
+		for(MultiValuedEntity entity:oldUser.getEmails()){
+			modList = LDAPModHelper(LDAPModification.DELETE, "mail", entity.getValue(), modList);
+			/*attribute = new LDAPAttribute("mail", entity.getValue());
+			modList.add(new LDAPModification(LDAPModification.DELETE, attribute));*/
+		}
+		//Email add
+		for(MultiValuedEntity entity:user.getEmails()){
+			modList = LDAPModHelper(LDAPModification.ADD, "mail", entity.getValue(), modList);
+		}
+
+		modList = LDAPModHelper(LDAPModification.DELETE, "userpassword", oldUser.getPassword(), modList);
+		modList = LDAPModHelper(LDAPModification.ADD, "userpassword", user.getPassword(), modList);
+
+		/*String[] oldNames = getLdapNames(oldUser.getName());
+		String[] names = getLdapNames(user.getName());
+		for(String name: oldNames){
+			modList = LDAPModHelper(LDAPModification.DELETE, "givenname", name, modList);
+		}
+		for(String name: names){
+			modList = LDAPModHelper(LDAPModification.ADD, "givenname", name, modList);
+		}*/
+
+		if(oldUser.getName()!=null){
+			String[] oldNames = getLdapNames(oldUser.getName());
+			if(oldNames != null && oldNames.length>0){
+				LDAPAttribute attribute = new LDAPAttribute("givenname", oldNames);
+				modList.add(new LDAPModification(LDAPModification.DELETE, attribute));
+			}
+			if(null != oldUser.getName().getFamilyName())
+				modList = LDAPModHelper(LDAPModification.DELETE, "sn", oldUser.getName().getFamilyName(), modList);
+			if(null != oldUser.getName().getGivenName())
+				modList = LDAPModHelper(LDAPModification.DELETE, "cn", oldUser.getName().getGivenName()+ " " +oldUser.getName().getFamilyName(), modList);
+		}
+
+		if(user.getName()!=null){
+			String[] names = getLdapNames(user.getName());
+			if(names != null && names.length>0){
+				LDAPAttribute attribute = new LDAPAttribute("givenname", names);
+				modList.add(new LDAPModification(LDAPModification.ADD, attribute));
+			}
+			if(null != user.getName().getFamilyName())
+				modList = LDAPModHelper(LDAPModification.ADD, "sn", user.getName().getFamilyName(), modList);
+			if(null != user.getName().getGivenName())
+				modList = LDAPModHelper(LDAPModification.ADD, "cn", user.getName().getGivenName()+ " " +user.getName().getFamilyName(), modList);
+
+		}
+
+		//phone number remove
+		for(MultiValuedEntity entity:oldUser.getPhoneNumbers()){
+			modList = LDAPModHelper(LDAPModification.DELETE, "telephoneNumber", entity.getValue(), modList);
+		}
+		//phone number add
+		for(MultiValuedEntity entity:user.getPhoneNumbers()){
+			modList = LDAPModHelper(LDAPModification.ADD, "telephoneNumber", entity.getValue(), modList);
+		}
+		
+		if(null != oldUser.getMeta()){
+			user.setMeta(new Meta());
+		}
+
+		Meta meta = user.getMeta();
+		meta.setLocation(ScimConstants.USER_URI+user.getId());
+		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
+		Integer version = Integer.parseInt(meta.getVersion())+1;
+		meta.setVersion(version.toString());
+		String lastModified =  Calendar.getInstance().getTime().toString();
+		meta.setLastModified(lastModified);
+		user.setMeta(meta);
+
+		modList = LDAPModHelper(LDAPModification.REPLACE, "description", getMetaString(meta), modList);
+
+		LDAPModification[] mods = new LDAPModification[modList.size()];
+		mods = (LDAPModification[]) modList.toArray(mods);
+
+		return mods;
+
+	}
+
 	public static ArrayList<LDAPModification> getLdapUserMod(ScimUser user, ScimUser oldUser){
-		boolean isSuccess = true;
-		String  dn  = DN_SUFFIX+ user.getExternalId() + COMMA + CONTAINER_NAME; 
 		ArrayList<LDAPModification> modList = new ArrayList<LDAPModification>();
 		LDAPAttribute attribute;
-
-		//TODO: mutability error check if not done already
 
 		// Replace all values the E-mail address with a new value
 		if(isModify(user.getEmails(), oldUser.getEmails())){
@@ -289,7 +379,7 @@ public class ScimUtils {
 		if(null != oldUser.getMeta()){
 			user.setMeta(new Meta());
 		}
-		
+
 		Meta meta = user.getMeta();
 		meta.setLocation(ScimConstants.USER_URI+user.getId());
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
@@ -298,46 +388,15 @@ public class ScimUtils {
 		String lastModified =  Calendar.getInstance().getTime().toString();
 		meta.setLastModified(lastModified);
 		user.setMeta(meta);
-		
-		attribute = new LDAPAttribute("description", meta.getVersion()+"~"+meta.getCreated()+
-				"~"+meta.getLastModified()+"~"+meta.getResourceType());
-		
+
+		attribute = new LDAPAttribute("description", getMetaString(meta));
+
 		modList.add(new LDAPModification(LDAPModification.REPLACE, attribute));
 
 		LDAPModification[] mods = new LDAPModification[modList.size()];
 		mods = (LDAPModification[]) modList.toArray(mods);
 
-		LDAPConnection lc = SSL_Connection.getConnection();
-		try {
-			// Add a known phone number value so we have something to change
-			lc.modify(dn, new LDAPModification(LDAPModification.ADD,new LDAPAttribute("telephoneNumber", "1 801 555 1212")));
-		} catch (LDAPException e1) {
-			// If phonenumber value already exists, just go on, otherwise it's an error
-			if (e1.getResultCode() != LDAPException.ATTRIBUTE_OR_VALUE_EXISTS) {
-				System.out.println("Cannot create attribute: " + e1.toString());
-				return false;
-			}
-		}
-
-		try {
-			lc.modify( dn, mods);
-			System.out.println("Successfully modified the attributes of the entry.");
-		} catch (LDAPException e2) {
-			System.err.println("Error: " + e2.toString());
-			isSuccess = false;
-			try {
-				lc.modify(dn, new LDAPModification(LDAPModification.DELETE,new LDAPAttribute("telephoneNumber", phone1)));
-			} catch (Exception e) {
-				// ignore
-			}
-		} finally {
-			try {
-				lc.disconnect();
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-		return isSuccess;
+		return modList;
 
 	}
 
@@ -346,7 +405,7 @@ public class ScimUtils {
 	}
 
 	public static String getDNFromExternalId(String extId){
-		return DN_SUFFIX+ extId + COMMA + CONTAINER_NAME; 
+		return DN_SUFFIX + extId + COMMA + CONTAINER_NAME; 
 	}
 
 	public static String getDNFromId(String id){

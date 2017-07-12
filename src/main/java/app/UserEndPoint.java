@@ -33,7 +33,6 @@ public class UserEndPoint {
 		List<ScimUser> users= UserService.search(search);
 		System.out.println("Endpoint:"+users.size());
 		return users;
-		// return new User(counter.incrementAndGet(),  String.format(template, value));
 	}
 
 	@ResponseStatus(HttpStatus.OK)
@@ -129,7 +128,7 @@ public class UserEndPoint {
 		if(user==null || user.getExternalId()==null || user.getExternalId().isEmpty())
 			throw new ScimResourceInvalid();
 
-		boolean updateStatus = UserService.updateUser(user);
+		boolean updateStatus = UserService.replaceUser(user);
 		if(updateStatus){
 			System.out.println(user+" Updated");
 		} else {

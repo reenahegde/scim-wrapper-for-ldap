@@ -130,7 +130,7 @@ public class UserService{
 		} 
 	}
 
-	public static boolean updateUser(ScimUser user){
+	public static boolean replaceUser(ScimUser user){
 		LDAPConnection lc = SSL_Connection.getConnection();
 
 		//Get DB user
@@ -143,11 +143,9 @@ public class UserService{
 		System.out.println("Ldap connection successful, ID: "+user);
 		String dn = ScimUtils.getDNFromExternalId(user.getExternalId());
 
-		//TODO: add modifications
-		LDAPModification mod = new LDAPModification();
+		LDAPModification[] mod = ScimUtils.pushLdapUser(user, dbuser);
 		try {	
 			lc.modify(dn, mod);
-
 			System.out.print(dn+" Updated");
 			// disconnect with the server
 			lc.disconnect();
@@ -159,13 +157,13 @@ public class UserService{
 		} 
 	}
 	
-	public boolean modifyUser(ScimUser user){
+	public boolean modifyUser(ScimUser user,ScimUser oldUser){
 
 		boolean isSuccess = true;
 		
 		String  dn  = "cn="+user.getExternalId()+"," + ScimConstants.USER_CONTAINER;
 
-		ArrayList<LDAPModification> modList = new ArrayList<LDAPModification>();
+		ArrayList<LDAPModification> modList = ScimUtils.getLdapUserMod(user, oldUser);
 		Date currentDate = new Date();
 		String desc ="This object was modified at " + new Date(currentDate.getTime());
 
