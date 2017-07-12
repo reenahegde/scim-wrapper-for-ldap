@@ -100,7 +100,7 @@ public class AddDefault
 
       LDAPConnection lc = new LDAPConnection();
 
-      LDAPAttribute  attribute = null;
+     // LDAPAttribute  attribute = null;
 
       LDAPAttributeSet attributeSet = new LDAPAttributeSet();
 

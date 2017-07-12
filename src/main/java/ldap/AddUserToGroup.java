@@ -55,6 +55,8 @@ import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPException;
 import com.novell.ldap.LDAPModification;
 
+import util.ScimConstants;
+
 public class AddUserToGroup {
 	public static void main(String[] args)	{
 
@@ -62,7 +64,7 @@ public class AddUserToGroup {
 
 		LDAPConnection lc = SSL_Connection.getConnection();
 
-		String userDN  = "cn=JSmith,ou=users,o=people";
+		String userDN  = "cn=JSmith,"+ScimConstants.USER_CONTAINER;
 
 		String groupDN = "cn=cumin,ou=groups,o=people";
 
