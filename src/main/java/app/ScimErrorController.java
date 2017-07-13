@@ -1,65 +1,76 @@
 package app;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.DefaultErrorAttributes;
+import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.boot.autoconfigure.web.ErrorController;
-import org.springframework.http.HttpStatus;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
-import scim.error.ErrorResponse404;
+import scim.error.ScimBaseException;
+import scim.error.ScimErrorResponse;
 
+/**
+ * 
+ * @author AkshathaKadri
+ *
+ */
 @RestController
 public class ScimErrorController implements ErrorController {
 
     private static final String PATH = "/error";
 
-    @RequestMapping(value = PATH)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    ErrorResponse404 error(HttpServletRequest request, HttpServletResponse response) {
-    	/*Map<String, Object> attr= getErrorAttributes(request, false);
-    	String id = ((String) attr.get("path")).split(ScimConstants.USER_PATH)[1];*/
-    	HashMap<?, ?> attr= (HashMap<?, ?>) request.getAttribute("org.springframework.web.servlet.View.pathVariables");
-    	String id = (String) attr.get("id");
-        return new ErrorResponse404(id);
-    }
-
+    @Autowired
+    private ErrorAttributes errorAttributes;
+    
     @Override
     public String getErrorPath() {
         return PATH;
     }
     
-    /*@Autowired
-    private ErrorAttributes errorAttributes;
+    @RequestMapping(value = PATH)
+    @ExceptionHandler({ScimBaseException.class})
+    public ScimErrorResponse handleException(HttpServletRequest request, HttpServletResponse response) {
+    	Map<String, Object> attr= getErrorAttributes(request, false);
+    	String status = (String) attr.get("scimStatus");
+    	String detail = (String) attr.get("scimDetail");
+    	String scimType = (String) attr.get("scimType");
+    	response.setStatus(Integer.parseInt(status));
+        return new ScimErrorResponse(status, detail, scimType);
+    }
     
     private Map<String, Object> getErrorAttributes(HttpServletRequest request, boolean includeStackTrace) {
         RequestAttributes requestAttributes = new ServletRequestAttributes(request);
         return errorAttributes.getErrorAttributes(requestAttributes, includeStackTrace);
-
-    }*/
+    }
     
-   /* @ExceptionHandler(ScimObjectNotFound.class)
-   	public ModelAndView handleError(HttpServletRequest req, ScimObjectNotFound exception)
-   			throws Exception {
+    @Bean
+    public ErrorAttributes errorAttributes() {
+        return new DefaultErrorAttributes() {
 
-   		// Rethrow annotated exceptions or they will be processed here instead.
-   		if (AnnotationUtils.findAnnotation(exception.getClass(),
-   				ResponseStatus.class) != null)
-   			throw exception;
+            @Override
+            public Map<String, Object> getErrorAttributes(
+                    RequestAttributes requestAttributes,
+                    boolean includeStackTrace) {
+                Map<String, Object> errorAttributes = super.getErrorAttributes(requestAttributes, includeStackTrace);
+                Throwable error = getError(requestAttributes);
+                if (error instanceof ScimBaseException) {
+                    errorAttributes.put("scimStatus", ((ScimBaseException)error).getStatus());
+                    errorAttributes.put("scimDetail", ((ScimBaseException)error).getDetail());
+                    errorAttributes.put("scimType", ((ScimBaseException)error).getScimType());
+                }
+                return errorAttributes;
+            }
 
-   		System.out.println("Request: " + req.getRequestURI() + " raised " + exception);
-
-   		ModelAndView mav = new ModelAndView();
-   		mav.addObject("exception", exception);
-   		mav.addObject("url", req.getRequestURL());
-   		mav.addObject("timestamp", new Date().toString());
-   		mav.addObject("status", 500);
-
-   		mav.setViewName("support");
-   		return mav;
-   	}*/
+        };
+    }
 }

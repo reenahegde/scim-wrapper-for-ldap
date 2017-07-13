@@ -3,6 +3,11 @@ package app;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 
+ * @author AkshathaKadri
+ *
+ */
 @RestController
 @RequestMapping("/Schemas")
 public class SchemaEndpoint {

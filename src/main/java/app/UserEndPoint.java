@@ -2,7 +2,9 @@ package app;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpStatus;
@@ -18,16 +20,31 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import scim.entity.ScimUser;
-import scim.error.ScimResourceInvalid;
+import scim.error.ScimBadRequest;
 import scim.error.ScimResourseNotFound;
 import scim.ldap.UserService;
 import util.ScimConstants;
 
+/**
+ * 
+ * @author AkshathaKadri
+ *
+ */
 @RestController
 public class UserEndPoint {
+	
+/*	@Inject
+    private Logger log;*/
+	
+	/**
+	 * Search Users
+	 * @param filter
+	 * @return
+	 */
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users", method = RequestMethod.GET, produces = "application/scim+json")
 	public List<ScimUser> searchUsers(@RequestParam(value="filter", defaultValue="userName") String filter) {
+		//TODO: multiple search parameters
 		String search = "("+filter.split(" ")[0]+"="+filter.split(" ")[2]+")";
 		System.out.println(search);
 		List<ScimUser> users= UserService.search(search);
@@ -35,11 +52,16 @@ public class UserEndPoint {
 		return users;
 	}
 
+	/**
+	 * Search User by ID
+	 * @param id
+	 * @return
+	 */
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.GET, produces = "application/scim+json")
-	public ScimUser searchUser(@PathVariable("id") String id) {
+	public ScimUser getUserById(@PathVariable("id") String id) {
 		System.out.println(id);
-		ScimUser users= UserService.getUser(id);
+		ScimUser users= UserService.getUserById(id);
 		System.out.println(users);
 		return users;
 		// return new User(counter.incrementAndGet(),  String.format(template, value));
@@ -65,6 +87,11 @@ public class UserEndPoint {
 		}
 	}
 
+	/**
+	 * Create User
+	 * @param input
+	 * @return
+	 */
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequestMapping(value = "/Users", method = RequestMethod.POST, produces = "application/scim+json")
 	public ScimUser createUser(@RequestParam(value="user") String input){
@@ -75,18 +102,15 @@ public class UserEndPoint {
 		try {
 			user = mapper.readValue(input, ScimUser.class);
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.getCause();
+			throw new ScimBadRequest("Request is unparsable");
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.getCause();
+			throw new ScimBadRequest("Request is syntactically incorrect");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.getCause();
+			throw new ScimBadRequest("Request is unparsable");
 		}
 
 		if(user==null || user.getExternalId()==null || user.getExternalId().isEmpty())
-			throw new ScimResourceInvalid();
+			throw new ScimBadRequest();
 
 		if(user.getEmails()==null || user.getEmails().isEmpty())
 			user.setEmail(user.getExternalId()+ScimConstants.DEFAULT_EMAIL_SUFFIX);
@@ -105,9 +129,9 @@ public class UserEndPoint {
 	 * @param id
 	 * @param response
 	 */
-	//@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.PUT)
-	public void putUser(@PathVariable("id") String id, @RequestParam(value="user") String input) {
+	public ScimUser putUser(@PathVariable("id") String id, @RequestParam(value="user") String input) {
 		System.out.println("\n"+input);
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -115,19 +139,17 @@ public class UserEndPoint {
 		try {
 			user = mapper.readValue(input, ScimUser.class);
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.getCause();
+			throw new ScimBadRequest("Request is unparsable");
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.getCause();
+			throw new ScimBadRequest("Request is syntactically incorrect");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.getCause();
+			throw new ScimBadRequest("Request is unparsable");
 		}
 
-		boolean updateStatus = UserService.replaceUser(id, user);
-		if(updateStatus){
+		ScimUser updateUser = UserService.replaceUser(id, user);
+		if(updateUser!=null){
 			System.out.println(user+" Updated");
+			return updateUser;
 		} else {
 			throw new ScimResourseNotFound(user.getId());
 		}

@@ -1,4 +1,4 @@
-package ldap;
+package util;
 //Sample code file: var/ndk/webBuildengine/tmp/viewable_samples/f91a68eb-ad37-4526-92b1-b1938f37b871/security/SSLConnection.java //Warning: This code has been marked up for HTML
 
 import java.io.UnsupportedEncodingException;
@@ -16,6 +16,7 @@ public class SSL_Connection {
 	public static LDAPConnection getConnection() {
 		return getConnection(false);
 	}
+	@SuppressWarnings("restriction")
 	public static LDAPConnection getConnection(boolean isTest) {
 		int ldapPort 		  = LDAPConnection.DEFAULT_SSL_PORT;
 

@@ -3,6 +3,11 @@ package app;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+/**
+ * 
+ * @author AkshathaKadri
+ *
+ */
 @SpringBootApplication
 public class Application {
 

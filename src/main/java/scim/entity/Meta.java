@@ -21,7 +21,7 @@ public class Meta {
 
 	public Meta(){
 		created = Calendar.getInstance().getTime().toString();
-		lastModified =  Calendar.getInstance().getTime().toString();
+		lastModified =  created;
 		version = ScimConstants.VERSION;
 	}
 	

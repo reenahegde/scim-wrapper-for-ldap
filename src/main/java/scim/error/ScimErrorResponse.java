@@ -6,6 +6,8 @@ package scim.error;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -15,26 +17,35 @@ import util.ScimConstants;
  * @author AkshathaKadri
  *
  */
-@JsonPropertyOrder({"schemas","status","detail"})
+@JsonPropertyOrder({"schemas","scimType","detail","status"})
 public class ScimErrorResponse{
 
 	@JsonProperty("schemas")
 	protected Set<String> schemas;
 	protected String detail;
 	protected String status;
+	protected String scimType;
+	
+	public ScimErrorResponse(String status, String detail, String scimType) {
+		schemas = new HashSet<String>();
+		schemas.add(ScimConstants.SCHEMA_ERROR);
+		this.status = status;
+		this.detail = detail;
+		this.scimType = scimType;
+	}
+	
+	public ScimErrorResponse(String status, String detail) {
+		schemas = new HashSet<String>();
+		schemas.add(ScimConstants.SCHEMA_ERROR);
+		this.status = status;
+		this.detail = detail;
+	}
 	
 	public ScimErrorResponse() {
 		schemas = new HashSet<String>();
 		schemas.add(ScimConstants.SCHEMA_ERROR);
 	}
 	
-	/*public ScimError(SCIM_CODES status) {
-		super();
-		schemas = new HashSet<String>();
-		schemas.add(ScimConstants.SCHEMA_ERROR);
-		this.detail = ScimHttpCodes.MsgPrefix+status;
-		this.status = ScimHttpCodes.CodePrefix+status;
-	}*/
 	public Set<String> getSchemas() {
 		return schemas;
 	}
@@ -43,6 +54,7 @@ public class ScimErrorResponse{
 			this.schemas = new HashSet<>();
 		this.schemas.add(schema);
 	}
+	@JsonInclude(Include.NON_NULL)
 	public String getDetail() {
 		return detail;
 	}
@@ -55,5 +67,12 @@ public class ScimErrorResponse{
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	
+	@JsonInclude(Include.NON_NULL)
+	public String getScimType() {
+		return scimType;
+	}
+
+	public void setScimType(String scimType) {
+		this.scimType = scimType;
+	}
 }

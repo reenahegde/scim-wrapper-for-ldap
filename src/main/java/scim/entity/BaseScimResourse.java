@@ -9,12 +9,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({ "schemas", "id", "externalId" })
 public class BaseScimResourse {
 	@JsonProperty("schemas")
-	protected Set<String> schemas = new HashSet<String>();
+	protected Set<String> schemas;
 	
 	protected String id;
 	protected String externalId;
 	protected Meta meta;
 	
+	public BaseScimResourse(){
+		schemas = new HashSet<String>();
+		meta = new Meta();
+	}
 	public Set<String> getSchemas() {
 		return schemas;
 	}
@@ -33,6 +37,8 @@ public class BaseScimResourse {
 
 	
 	public Meta getMeta() {
+		if(meta == null)
+			meta = new Meta();
 		return meta;
 	}
 

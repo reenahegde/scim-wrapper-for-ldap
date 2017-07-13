@@ -1,21 +1,22 @@
 package scim.ldap;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import com.novell.ldap.LDAPAttribute;
 import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 import com.novell.ldap.LDAPModification;
 import com.novell.ldap.LDAPSearchResults;
 
-import ldap.SSL_Connection;
 import scim.entity.Meta;
 import scim.entity.ScimUser;
-import scim.error.ScimResourceInvalid;
+import scim.error.ScimBadRequest;
+import scim.error.ScimConflictException;
+import scim.error.ScimResourseNotFound;
+import util.SSL_Connection;
 import util.ScimConstants;
 import util.ScimUtils;
+import util.ScimUtils.Mutability;
 
 public class UserService{
 	static String ldapHost = "192.168.1.11";
@@ -61,8 +62,12 @@ public class UserService{
 		//System.exit(0);
 	}
 
-	public static ScimUser getUser(String id){
-		return getUser("uid",id);
+	public static ScimUser getUserById(String id){
+		ScimUser scimUser =  getUser("uid",id);
+		if(scimUser == null){
+			throw new ScimResourseNotFound(id);
+		}
+		return scimUser;
 	}
 	public static ScimUser getUser(String query, String value){
 		ScimUser userRet = null;
@@ -91,9 +96,6 @@ public class UserService{
 		user.setId(ScimUtils.generateIdForUser(user.getExternalId()));
 		Meta meta = user.getMeta();
 		String location = ScimConstants.USER_URI+user.getId();
-		if(meta==null){
-			meta = new Meta();
-		}
 		meta.setLocation(location);
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
 		meta.setVersion(ScimConstants.VERSION);
@@ -106,10 +108,11 @@ public class UserService{
 			lc.add(entry);
 			System.out.println( "\nAdded object: " + user.getId() + " successfully." );
 
-			newUser = getUser(user.getId());
+			newUser = getUserById(user.getId());
 			lc.disconnect();
 		}	catch( LDAPException e ) {
-			System.out.println( "Error: " + e.toString() );
+			//System.out.println( "Error: " + e.toString() );
+			throw new ScimConflictException();
 		}
 		return newUser;
 	}
@@ -131,16 +134,15 @@ public class UserService{
 		} 
 	}
 
-	public static boolean replaceUser(String id, ScimUser user){
+	public static ScimUser replaceUser(String id, ScimUser user){
 		System.out.println("In replaceUser "+user);
 		LDAPConnection lc = SSL_Connection.getConnection();
 
 		//Get DB user
-		ScimUser dbuser= UserService.getUser(id);
-
+		ScimUser dbuser= UserService.getUserById(id);
+		
 		if(user.getId()!=null && !user.getId().isEmpty() && user.getId()!=dbuser.getId()){
-			//TODO: throw immutability error
-			throw new ScimResourceInvalid();
+			throw new ScimBadRequest("id", Mutability.readOnly,"mutability");
 		}
 
 		String dn = ScimUtils.getDNFromExternalId(user.getExternalId());
@@ -149,13 +151,15 @@ public class UserService{
 		try {	
 			lc.modify(dn, mod);
 			System.out.print(dn+" Updated");
+			//Get DB user
+			dbuser= UserService.getUserById(id);
 			// disconnect with the server
 			lc.disconnect();
-			return true;
+			return dbuser;
 		}
 		catch (LDAPException e) {
 			System.out.println("Error:  " + e.toString());
-			return false;
+			return null;
 		} 
 	}
 	

@@ -16,42 +16,15 @@ import scim.entity.ScimUser;
 
 public class ScimUtils {
 
-	public static final String userObjClass = "inetOrgPerson";
-	public static final String COMMA = ",";
-	public static final String DN_SUFFIX= "cn=";
-	public static final String CONTAINER_NAME  = ScimConstants.USER_CONTAINER;
-	public static final String META_DELIM  = "|";
-
-	/*public static void main(String[] args) {
-		Calendar cal = getCurrentDate();
-		System.out.println(cal);
-	}
-	public static Calendar parseDateString(String date){
-		Calendar cal = Calendar.getInstance();
-		SimpleDateFormat sdf = new SimpleDateFormat(ScimConstants.DATE_FORMAT, Locale.ENGLISH);
-		try {
-			cal.setTime(sdf.parse(date));
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return cal;
-	}
-
-	public static Calendar getCurrentDate() {
-		Calendar cal = Calendar.getInstance();
-		SimpleDateFormat sdf = new SimpleDateFormat(ScimConstants.DATE_FORMAT, Locale.ENGLISH);
-		try {
-			cal.setTime(sdf.parse(cal.toString()));
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return cal;
-	}*/
+	private static final String userObjClass = "inetOrgPerson";
+	private static final String COMMA = ",";
+	private static final String DN_SUFFIX= "cn=";
+	private static final String CONTAINER_NAME  = ScimConstants.USER_CONTAINER;
+	private static final String META_DELIM  = "~";
+	public enum Mutability {readOnly,readWrite};
 
 	/**
-	 * 
+	 * get User
 	 * @param nextEntry
 	 * @return
 	 */
@@ -90,7 +63,7 @@ public class ScimUtils {
 			List<MultiValuedEntity> phones = new ArrayList<MultiValuedEntity>();
 			MultiValuedEntity phone = new MultiValuedEntity();
 			phone.setValue(dp.getStringValue());
-			phone.setPrimary("true");
+			//phone.setPrimary("true");
 			phones.add(phone);
 			user.setPhoneNumbers(phones);
 		}
@@ -101,7 +74,7 @@ public class ScimUtils {
 		dp = nextEntry.getAttribute("description");
 		if(dp!=null){
 			String metaData = dp.getStringValue();
-			String metaArray[] = metaData.split("~");
+			String metaArray[] = metaData.split(META_DELIM);
 			if(metaArray.length>2){
 				meta.setVersion(metaArray[0]);
 				meta.setCreated(metaArray[1]);
@@ -168,7 +141,7 @@ public class ScimUtils {
 	}
 
 	private static String getMetaString(Meta meta){
-		return meta.getVersion()+"~"+meta.getCreated()+"~"+meta.getLastModified()+"~"+meta.getResourceType();
+		return meta.getVersion()+META_DELIM+meta.getCreated()+META_DELIM+meta.getLastModified()+META_DELIM+meta.getResourceType();
 	}
 	public static LDAPEntry getLdapUserEntry(ScimUser user){
 		LDAPAttributeSet attributeSet = new LDAPAttributeSet();                  
@@ -265,8 +238,6 @@ public class ScimUtils {
 		//Email remove
 		for(MultiValuedEntity entity:oldUser.getEmails()){
 			modList = LDAPModHelper(LDAPModification.DELETE, "mail", entity.getValue(), modList);
-			/*attribute = new LDAPAttribute("mail", entity.getValue());
-			modList.add(new LDAPModification(LDAPModification.DELETE, attribute));*/
 		}
 		//Email add
 		for(MultiValuedEntity entity:user.getEmails()){
@@ -319,12 +290,13 @@ public class ScimUtils {
 			modList = LDAPModHelper(LDAPModification.ADD, "telephoneNumber", entity.getValue(), modList);
 		}
 		
-		if(null != oldUser.getMeta()){
+		//If the old user does not have description set
+		if(null == oldUser.getMeta()){
 			user.setMeta(new Meta());
 		}
 
-		Meta meta = user.getMeta();
-		meta.setLocation(ScimConstants.USER_URI+user.getId());
+		Meta meta = oldUser.getMeta();
+		meta.setLocation(ScimConstants.USER_URI+oldUser.getId());
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
 		Integer version = Integer.parseInt(meta.getVersion())+1;
 		meta.setVersion(version.toString());
@@ -376,7 +348,8 @@ public class ScimUtils {
 			modList.add(new LDAPModification(LDAPModification.ADD, attribute));
 		}
 
-		if(null != oldUser.getMeta()){
+		//If the old user does not have description set
+		if(null == oldUser.getMeta()){
 			user.setMeta(new Meta());
 		}
 
