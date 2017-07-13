@@ -1,4 +1,4 @@
-package util;
+package scim.util;
 
 public class ScimConstants {
 	public static final String ORG = "SATH";

@@ -1,4 +1,4 @@
-package util;
+package scim.util;
 //Sample code file: var/ndk/webBuildengine/tmp/viewable_samples/f91a68eb-ad37-4526-92b1-b1938f37b871/security/SSLConnection.java //Warning: This code has been marked up for HTML
 
 import java.io.UnsupportedEncodingException;

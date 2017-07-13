@@ -3,7 +3,7 @@
  */
 package scim.error;
 
-import util.ScimUtils.Mutability;
+import scim.util.ScimUtils.Mutability;
 
 /**
  * @author AkshathaKadri

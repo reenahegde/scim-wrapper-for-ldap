@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import util.ScimConstants;
+import scim.util.ScimConstants;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ScimUser extends BaseScimResourse{

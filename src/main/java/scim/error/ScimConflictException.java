@@ -3,7 +3,7 @@
  */
 package scim.error;
 
-import util.ScimConstants;
+import scim.util.ScimConstants;
 
 /**
  * @author AkshathaKadri

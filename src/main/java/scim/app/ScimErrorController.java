@@ -1,4 +1,4 @@
-package app;
+package scim.app;
 
 import java.util.Map;
 

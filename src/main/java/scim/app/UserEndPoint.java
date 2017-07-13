@@ -1,12 +1,11 @@
-package app;
+package scim.app;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +22,7 @@ import scim.entity.ScimUser;
 import scim.error.ScimBadRequest;
 import scim.error.ScimResourseNotFound;
 import scim.ldap.UserService;
-import util.ScimConstants;
+import scim.util.ScimConstants;
 
 /**
  * 
@@ -32,7 +31,8 @@ import util.ScimConstants;
  */
 @RestController
 public class UserEndPoint {
-	
+	@Autowired
+	UserService userService;
 /*	@Inject
     private Logger log;*/
 	
@@ -47,7 +47,7 @@ public class UserEndPoint {
 		//TODO: multiple search parameters
 		String search = "("+filter.split(" ")[0]+"="+filter.split(" ")[2]+")";
 		System.out.println(search);
-		List<ScimUser> users= UserService.search(search);
+		List<ScimUser> users= userService.search(search);
 		System.out.println("Endpoint:"+users.size());
 		return users;
 	}
@@ -61,7 +61,7 @@ public class UserEndPoint {
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.GET, produces = "application/scim+json")
 	public ScimUser getUserById(@PathVariable("id") String id) {
 		System.out.println(id);
-		ScimUser users= UserService.getUserById(id);
+		ScimUser users= userService.getUserById(id);
 		System.out.println(users);
 		return users;
 		// return new User(counter.incrementAndGet(),  String.format(template, value));
@@ -76,7 +76,7 @@ public class UserEndPoint {
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.DELETE)
 	public void deleteUser(@PathVariable("id") String id,HttpServletResponse response) {
 		System.out.println(id);
-		boolean deleteStatus = UserService.deleteUser(id);
+		boolean deleteStatus = userService.deleteUser(id);
 		if(deleteStatus){
 			System.out.println(id+" Deleted");
 		} else {
@@ -119,7 +119,7 @@ public class UserEndPoint {
 			user.setPassword(ScimConstants.DEFAULT_PASSWORD);
 		
 		System.out.println(user);
-		ScimUser newUser = UserService.addUser(user);
+		ScimUser newUser = userService.addUser(user);
 
 		return newUser;// Response.created(URI.create(uri)).entity(newUser).build();
 	}
@@ -146,7 +146,7 @@ public class UserEndPoint {
 			throw new ScimBadRequest("Request is unparsable");
 		}
 
-		ScimUser updateUser = UserService.replaceUser(id, user);
+		ScimUser updateUser = userService.replaceUser(id, user);
 		if(updateUser!=null){
 			System.out.println(user+" Updated");
 			return updateUser;

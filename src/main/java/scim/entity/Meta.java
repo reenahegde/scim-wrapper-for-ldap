@@ -4,7 +4,7 @@ import java.util.Calendar;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import util.ScimConstants;
+import scim.util.ScimConstants;
 
 @JsonPropertyOrder({ "resourceType", "created" , "lastModified", "location", "version"})
 public class Meta {

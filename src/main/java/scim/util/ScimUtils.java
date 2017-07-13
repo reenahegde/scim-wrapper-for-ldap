@@ -1,8 +1,10 @@
-package util;
+package scim.util;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import org.hibernate.validator.internal.util.StringHelper;
 
 import com.novell.ldap.LDAPAttribute;
 import com.novell.ldap.LDAPAttributeSet;
@@ -28,7 +30,7 @@ public class ScimUtils {
 	 * @param nextEntry
 	 * @return
 	 */
-	public static ScimUser getUser(LDAPEntry nextEntry){
+	public static ScimUser getScimUser(LDAPEntry nextEntry){
 		ScimUser user = new ScimUser();
 
 		LDAPAttribute dp;
@@ -69,7 +71,6 @@ public class ScimUtils {
 		}
 
 		//Meta data ------------------------------------------------
-		//TODO: add meta in schema
 		Meta meta = user.getMeta();
 		dp = nextEntry.getAttribute("description");
 		if(dp!=null){
@@ -95,8 +96,9 @@ public class ScimUtils {
 	}
 
 	private static String[] getLdapNames(Name name){
-		String[] names = {name.getGivenName(),name.getMiddleName(),name.getFamilyName(),name.getHonorificPrefix()+" "+name.getGivenName(),name.getFamilyName()+" "+name.getHonorificSuffix()};
-		//String[] names = {name.getFormatted()};
+		String[] names = { name.getGivenName(), name.getMiddleName(), name.getFamilyName(),
+				name.getHonorificPrefix() + " " + name.getGivenName(),
+				name.getFamilyName() + " " + name.getHonorificSuffix() };
 		return names;
 	}
 
@@ -106,11 +108,6 @@ public class ScimUtils {
 		for(String s:names){
 			namesArr.add(s);
 		}
-
-		/*String[] famName = namesArr.get(1).toString().split(" ");
-		name.setFamilyName(famName[0]);
-		if(famName.length>1)
-			name.setHonorificSuffix(famName[1]);*/
 
 		if(namesArr.size()>4){
 			String[] temp = namesArr.get(4).toString().split(" ");
@@ -143,7 +140,7 @@ public class ScimUtils {
 	private static String getMetaString(Meta meta){
 		return meta.getVersion()+META_DELIM+meta.getCreated()+META_DELIM+meta.getLastModified()+META_DELIM+meta.getResourceType();
 	}
-	public static LDAPEntry getLdapUserEntry(ScimUser user){
+	public static LDAPEntry getLdapEntry(ScimUser user){
 		LDAPAttributeSet attributeSet = new LDAPAttributeSet();                  
 		attributeSet.add( new LDAPAttribute("objectclass", userObjClass));     
 
@@ -205,8 +202,8 @@ public class ScimUtils {
 	 */
 	private static boolean isModify(String entity, String oldEntity){
 		boolean isModify = false;
-		if(entity != null && !entity.isEmpty()) {
-			if(oldEntity != null && !oldEntity.isEmpty()) {
+		if(StringHelper.isNullOrEmptyString(entity)) {
+			if(StringHelper.isNullOrEmptyString(oldEntity)) {
 				if(!entity.equals(oldEntity)){
 					isModify = true;
 				}
@@ -313,6 +310,7 @@ public class ScimUtils {
 
 	}
 
+	//TODO: Remove if not implementing PATCH
 	public static ArrayList<LDAPModification> getLdapUserMod(ScimUser user, ScimUser oldUser){
 		ArrayList<LDAPModification> modList = new ArrayList<LDAPModification>();
 		LDAPAttribute attribute;
