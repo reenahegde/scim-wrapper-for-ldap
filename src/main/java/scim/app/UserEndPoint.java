@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,11 +34,11 @@ import scim.util.ScimErrorConstants;
  */
 @RestController
 public class UserEndPoint {
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	@Autowired
 	UserService userService;
-/*	@Inject
-    private Logger log;*/
-	
+
 	/**
 	 * Search Users
 	 * @param filter
@@ -47,9 +49,9 @@ public class UserEndPoint {
 	public List<ScimUser> searchUsers(@RequestParam(value="filter", defaultValue="userName") String filter) {
 		//TODO: multiple search parameters
 		String search = "("+filter.split(" ")[0]+"="+filter.split(" ")[2]+")";
-		//System.out.println(search);
+		logger.info(search);
 		List<ScimUser> users= userService.search(search);
-		//System.out.println("Endpoint:"+users.size());
+		logger.info("Users size:"+users.size());
 		return users;
 	}
 
@@ -61,10 +63,10 @@ public class UserEndPoint {
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.GET, produces = "application/scim+json")
 	public ScimUser getUserById(@PathVariable("id") String id) {
-		//System.out.println(id);
-		ScimUser users= userService.getUserById(id);
-		//System.out.println(users);
-		return users;
+		logger.info(id);
+		ScimUser user= userService.getUserById(id);
+		logger.info(user.toString());
+		return user;
 	}
 
 	/**
@@ -75,10 +77,10 @@ public class UserEndPoint {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.DELETE)
 	public void deleteUser(@PathVariable("id") String id,HttpServletResponse response) {
-		//System.out.println(id);
+		logger.info(id);
 		boolean deleteStatus = userService.deleteUser(id);
 		if(deleteStatus){
-			//System.out.println(id+" Deleted");
+			logger.info(id+" Deleted");
 		} else {
 			throw new ScimResourseNotFound(id);
 		}
@@ -102,11 +104,11 @@ public class UserEndPoint {
 
 		if(user.getPassword()==null || user.getPassword().isEmpty())
 			user.setPassword(ScimConstants.DEFAULT_PASSWORD);
-		
-		//System.out.println(user);
+
+		logger.info(user.toString());
 		ScimUser newUser = userService.addUser(user);
 
-		return newUser;// Response.created(URI.create(uri)).entity(newUser).build();
+		return newUser;
 	}
 
 	/**
@@ -121,14 +123,14 @@ public class UserEndPoint {
 
 		ScimUser updateUser = userService.replaceUser(id, user);
 		if(updateUser!=null){
-			//System.out.println(user+" Updated");
+			logger.info(user+" Updated");
 			return updateUser;
 		} else {
 			throw new ScimResourseNotFound(user.getId());
 		}
 	}
-	
-	
+
+
 	/**
 	 * PATCH User
 	 * @param id
@@ -140,13 +142,13 @@ public class UserEndPoint {
 		ScimUser user = getUserFromJson(input);
 		ScimUser updateUser = userService.updateUser(id, user);
 		if(updateUser!=null){
-			//System.out.println(user+" Updated");
+			logger.info(user+" Updated");
 			return updateUser;
 		} else {
 			throw new ScimResourseNotFound(user.getId());
 		}
 	}
-	
+
 	/**
 	 * get ScimUser From Json String
 	 * @param input
