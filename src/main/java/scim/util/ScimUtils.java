@@ -50,9 +50,9 @@ public class ScimUtils {
 			user.setEmails(emails);
 		}
 
-		dp = nextEntry.getAttribute("userpassword");
+		/*dp = nextEntry.getAttribute("userpassword");
 		if(dp!=null)
-			user.setPassword(dp.getStringValue());
+			user.setPassword(dp.getStringValue());*/
 
 		dp = nextEntry.getAttribute("givenName");
 		if(dp!=null && dp.getStringValueArray().length>0) {
@@ -311,7 +311,7 @@ public class ScimUtils {
 	}
 
 	//TODO: Remove if not implementing PATCH
-	public static ArrayList<LDAPModification> getLdapUserMod(ScimUser user, ScimUser oldUser){
+	public static LDAPModification[] getLdapUserMod(ScimUser user, ScimUser oldUser){
 		ArrayList<LDAPModification> modList = new ArrayList<LDAPModification>();
 		LDAPAttribute attribute;
 
@@ -367,7 +367,7 @@ public class ScimUtils {
 		LDAPModification[] mods = new LDAPModification[modList.size()];
 		mods = (LDAPModification[]) modList.toArray(mods);
 
-		return modList;
+		return mods;
 
 	}
 

@@ -174,8 +174,32 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public ScimUser updateUser(String id, ScimUser user) {
-		// TODO Auto-generated method stub
-		return null;
+		System.out.println("In updateUser "+user);
+		LDAPConnection lc = SSL_Connection.getConnection();
+
+		//Get DB user
+		ScimUser dbuser= getUserById(id);
+		
+		if(user.getId()!=null && !user.getId().isEmpty() && user.getId()!=dbuser.getId()){
+			throw new ScimBadRequest("id", Mutability.readOnly,"mutability");
+		}
+
+		String dn = ScimUtils.getDNFromExternalId(user.getExternalId());
+
+		LDAPModification[] mod = ScimUtils.getLdapUserMod(user, dbuser);
+		try {	
+			lc.modify(dn, mod);
+			System.out.print(dn+" Updated");
+			//Get DB user
+			dbuser= getUserById(id);
+			// disconnect with the server
+			lc.disconnect();
+			return dbuser;
+		}
+		catch (LDAPException e) {
+			System.out.println("Error:  " + e.toString());
+			return null;
+		} 
 	}
 	
 }

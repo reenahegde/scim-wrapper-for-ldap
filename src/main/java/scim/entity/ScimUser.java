@@ -165,6 +165,7 @@ public class ScimUser extends BaseScimResourse{
 		this.active = active;
 	}
 
+	@JsonInclude(Include.NON_NULL)
 	public String getPassword() {
 		return password;
 	}

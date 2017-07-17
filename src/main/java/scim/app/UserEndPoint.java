@@ -47,9 +47,9 @@ public class UserEndPoint {
 	public List<ScimUser> searchUsers(@RequestParam(value="filter", defaultValue="userName") String filter) {
 		//TODO: multiple search parameters
 		String search = "("+filter.split(" ")[0]+"="+filter.split(" ")[2]+")";
-		System.out.println(search);
+		//System.out.println(search);
 		List<ScimUser> users= userService.search(search);
-		System.out.println("Endpoint:"+users.size());
+		//System.out.println("Endpoint:"+users.size());
 		return users;
 	}
 
@@ -61,9 +61,9 @@ public class UserEndPoint {
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.GET, produces = "application/scim+json")
 	public ScimUser getUserById(@PathVariable("id") String id) {
-		System.out.println(id);
+		//System.out.println(id);
 		ScimUser users= userService.getUserById(id);
-		System.out.println(users);
+		//System.out.println(users);
 		return users;
 	}
 
@@ -75,10 +75,10 @@ public class UserEndPoint {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.DELETE)
 	public void deleteUser(@PathVariable("id") String id,HttpServletResponse response) {
-		System.out.println(id);
+		//System.out.println(id);
 		boolean deleteStatus = userService.deleteUser(id);
 		if(deleteStatus){
-			System.out.println(id+" Deleted");
+			//System.out.println(id+" Deleted");
 		} else {
 			throw new ScimResourseNotFound(id);
 		}
@@ -103,7 +103,7 @@ public class UserEndPoint {
 		if(user.getPassword()==null || user.getPassword().isEmpty())
 			user.setPassword(ScimConstants.DEFAULT_PASSWORD);
 		
-		System.out.println(user);
+		//System.out.println(user);
 		ScimUser newUser = userService.addUser(user);
 
 		return newUser;// Response.created(URI.create(uri)).entity(newUser).build();
@@ -121,7 +121,7 @@ public class UserEndPoint {
 
 		ScimUser updateUser = userService.replaceUser(id, user);
 		if(updateUser!=null){
-			System.out.println(user+" Updated");
+			//System.out.println(user+" Updated");
 			return updateUser;
 		} else {
 			throw new ScimResourseNotFound(user.getId());
@@ -140,13 +140,18 @@ public class UserEndPoint {
 		ScimUser user = getUserFromJson(input);
 		ScimUser updateUser = userService.updateUser(id, user);
 		if(updateUser!=null){
-			System.out.println(user+" Updated");
+			//System.out.println(user+" Updated");
 			return updateUser;
 		} else {
 			throw new ScimResourseNotFound(user.getId());
 		}
 	}
 	
+	/**
+	 * get ScimUser From Json String
+	 * @param input
+	 * @return
+	 */
 	private ScimUser getUserFromJson(String input){
 		ObjectMapper mapper = new ObjectMapper();
 		try {
