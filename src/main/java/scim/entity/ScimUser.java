@@ -17,6 +17,7 @@ public class ScimUser extends BaseScimResourse{
 	private String nickName;
 	private String profileUrl;
 	private List<MultiValuedEntity> emails;
+	private List<Address> addresses;
 	private List<MultiValuedEntity> phoneNumbers;
 	private List<MultiValuedEntity> ims;
 	private List<MultiValuedEntity> photos;
@@ -91,6 +92,14 @@ public class ScimUser extends BaseScimResourse{
 
 	public void setEmails(List<MultiValuedEntity> emails) {
 		this.emails = emails;
+	}
+
+	public List<Address> getAddresses() {
+		return addresses;
+	}
+
+	public void setAddresses(List<Address> addresses) {
+		this.addresses = addresses;
 	}
 
 	public List<MultiValuedEntity> getPhoneNumbers() {

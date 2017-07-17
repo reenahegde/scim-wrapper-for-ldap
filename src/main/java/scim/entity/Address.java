@@ -1,6 +1,6 @@
 package scim.entity;
 
-public class Addresses {
+public class Address {
 	private String type;
 	private String streetAddress;
 	private String locality;
