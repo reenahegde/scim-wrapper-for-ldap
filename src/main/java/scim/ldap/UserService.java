@@ -25,4 +25,6 @@ public interface UserService {
 
 	ScimUser replaceUser(String id, ScimUser user);
 
+	ScimUser updateUser(String id, ScimUser user);
+
 }

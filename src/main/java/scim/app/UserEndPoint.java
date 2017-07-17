@@ -23,6 +23,7 @@ import scim.error.ScimBadRequest;
 import scim.error.ScimResourseNotFound;
 import scim.ldap.UserService;
 import scim.util.ScimConstants;
+import scim.util.ScimErrorConstants;
 
 /**
  * 
@@ -64,7 +65,6 @@ public class UserEndPoint {
 		ScimUser users= userService.getUserById(id);
 		System.out.println(users);
 		return users;
-		// return new User(counter.incrementAndGet(),  String.format(template, value));
 	}
 
 	/**
@@ -81,9 +81,6 @@ public class UserEndPoint {
 			System.out.println(id+" Deleted");
 		} else {
 			throw new ScimResourseNotFound(id);
-			//response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-			//response.seentity(error).build();
-			//throw new NotFound404Error();
 		}
 	}
 
@@ -95,19 +92,7 @@ public class UserEndPoint {
 	@ResponseStatus(HttpStatus.CREATED)
 	@RequestMapping(value = "/Users", method = RequestMethod.POST, produces = "application/scim+json")
 	public ScimUser createUser(@RequestParam(value="user") String input){
-		System.out.println("\n"+input);
-
-		ObjectMapper mapper = new ObjectMapper();
-		ScimUser user = null;
-		try {
-			user = mapper.readValue(input, ScimUser.class);
-		} catch (JsonParseException e) {
-			throw new ScimBadRequest("Request is unparsable");
-		} catch (JsonMappingException e) {
-			throw new ScimBadRequest("Request is syntactically incorrect");
-		} catch (IOException e) {
-			throw new ScimBadRequest("Request is unparsable");
-		}
+		ScimUser user = getUserFromJson(input);
 
 		if(user==null || user.getExternalId()==null || user.getExternalId().isEmpty())
 			throw new ScimBadRequest();
@@ -132,19 +117,7 @@ public class UserEndPoint {
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.PUT)
 	public ScimUser putUser(@PathVariable("id") String id, @RequestParam(value="user") String input) {
-		System.out.println("\n"+input);
-
-		ObjectMapper mapper = new ObjectMapper();
-		ScimUser user = null;
-		try {
-			user = mapper.readValue(input, ScimUser.class);
-		} catch (JsonParseException e) {
-			throw new ScimBadRequest("Request is unparsable");
-		} catch (JsonMappingException e) {
-			throw new ScimBadRequest("Request is syntactically incorrect");
-		} catch (IOException e) {
-			throw new ScimBadRequest("Request is unparsable");
-		}
+		ScimUser user = getUserFromJson(input);
 
 		ScimUser updateUser = userService.replaceUser(id, user);
 		if(updateUser!=null){
@@ -152,6 +125,38 @@ public class UserEndPoint {
 			return updateUser;
 		} else {
 			throw new ScimResourseNotFound(user.getId());
+		}
+	}
+	
+	
+	/**
+	 * PATCH User
+	 * @param id
+	 * @param response
+	 */
+	@ResponseStatus(HttpStatus.OK)
+	@RequestMapping(value = "/Users/{id}", method = RequestMethod.PATCH)
+	public ScimUser patchUser(@PathVariable("id") String id, @RequestParam(value="user") String input) {
+		ScimUser user = getUserFromJson(input);
+		ScimUser updateUser = userService.updateUser(id, user);
+		if(updateUser!=null){
+			System.out.println(user+" Updated");
+			return updateUser;
+		} else {
+			throw new ScimResourseNotFound(user.getId());
+		}
+	}
+	
+	private ScimUser getUserFromJson(String input){
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			return mapper.readValue(input, ScimUser.class);
+		} catch (JsonParseException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
+		} catch (JsonMappingException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_SYNTAX_ERROR);
+		} catch (IOException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
 		}
 	}
 }

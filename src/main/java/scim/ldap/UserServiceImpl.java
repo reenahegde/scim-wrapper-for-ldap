@@ -171,5 +171,11 @@ public class UserServiceImpl implements UserService {
 			return null;
 		} 
 	}
+
+	@Override
+	public ScimUser updateUser(String id, ScimUser user) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 }
