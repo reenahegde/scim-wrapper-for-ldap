@@ -2,6 +2,8 @@ package scim.ldap;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import com.novell.ldap.LDAPConnection;
@@ -11,17 +13,20 @@ import com.novell.ldap.LDAPModification;
 import com.novell.ldap.LDAPSearchResults;
 
 import scim.entity.Meta;
+import scim.entity.PatchOp;
+import scim.entity.PatchOperation;
 import scim.entity.ScimUser;
 import scim.error.ScimBadRequest;
 import scim.error.ScimConflictException;
 import scim.error.ScimResourseNotFound;
 import scim.util.SSL_Connection;
 import scim.util.ScimConstants;
+import scim.util.ScimErrorConstants;
 import scim.util.ScimUtils;
 import scim.util.ScimUtils.Mutability;
 @Repository
 public class UserServiceImpl implements UserService {
-
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	//private final static AtomicLong counter = new AtomicLong();
 	public static void main(String[] args)	{
 		String search1 = "(mail=JSmith2@kirkland.com)";
@@ -165,13 +170,32 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public ScimUser updateUser(String id, ScimUser user) {
-		System.out.println("In updateUser "+user);
+	public ScimUser patchUser(String id, PatchOp patchOp) {
+		System.out.println("In updateUser "+patchOp);
+		for(PatchOperation patchUser: patchOp.getOperations()){
+			updateUser(id, patchUser);
+		}
+		//Get DB user
+		ScimUser dbuser= getUserById(id);
+		return dbuser;
+	}
+	
+	public void updateUser(String id, PatchOperation patchUser) {
+		System.out.println("In updateUser "+patchUser);
 		LDAPConnection lc = SSL_Connection.getConnection();
 
 		//Get DB user
 		ScimUser dbuser= getUserById(id);
-		
+		ScimUser user = null;
+		try{
+			user = (ScimUser) patchUser.getValue();
+		} catch(Exception e){
+			logger.error(e.getMessage());
+			e.printStackTrace();
+		}
+		if(user == null) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
+		}
 		if(user.getId()!=null && !user.getId().isEmpty() && user.getId()!=dbuser.getId()){
 			throw new ScimBadRequest("id", Mutability.readOnly,"mutability");
 		}
@@ -182,15 +206,10 @@ public class UserServiceImpl implements UserService {
 		try {	
 			lc.modify(dn, mod);
 			System.out.print(dn+" Updated");
-			//Get DB user
-			dbuser= getUserById(id);
-			// disconnect with the server
 			lc.disconnect();
-			return dbuser;
 		}
 		catch (LDAPException e) {
 			System.out.println("Error:  " + e.toString());
-			return null;
 		} 
 	}
 	

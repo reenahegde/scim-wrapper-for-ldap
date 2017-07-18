@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import scim.entity.ListResponse;
 import scim.entity.ResourceType;
+import scim.util.ScimConstants;
 import scim.util.ScimUtils;
 
 /**
@@ -45,4 +47,22 @@ public class ResourceTypesEndPoint {
 		return list;
 	}
 
+	/**
+	 * Search User by ID
+	 * @param id
+	 * @return
+	 */
+	@ResponseStatus(HttpStatus.OK)
+	@RequestMapping(value = "/ResourceTypes/{id}", method = RequestMethod.GET, produces = "application/scim+json")
+	public ResourceType getResourceTypesById(@PathVariable("id") String id) {
+		logger.info(id);
+		ResourceType resourceType = null;
+		switch(id){
+			case ScimConstants.USER_RESOURCE_TYPE:
+				resourceType =ScimUtils.getUserResource();
+				logger.info(resourceType.toString());
+				break;
+		}
+		return resourceType;
+	}
 }

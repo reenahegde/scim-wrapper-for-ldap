@@ -1,11 +1,15 @@
 package scim.util;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import org.hibernate.validator.internal.util.StringHelper;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.novell.ldap.LDAPAttribute;
 import com.novell.ldap.LDAPAttributeSet;
 import com.novell.ldap.LDAPEntry;
@@ -17,6 +21,7 @@ import scim.entity.Name;
 import scim.entity.ResourceType;
 import scim.entity.Schema;
 import scim.entity.ScimUser;
+import scim.error.ScimBadRequest;
 
 public class ScimUtils {
 
@@ -313,7 +318,6 @@ public class ScimUtils {
 
 	}
 
-	//TODO: Remove if not implementing PATCH
 	public static LDAPModification[] getLdapUserMod(ScimUser user, ScimUser oldUser){
 		ArrayList<LDAPModification> modList = new ArrayList<LDAPModification>();
 		LDAPAttribute attribute;
@@ -399,7 +403,26 @@ public class ScimUtils {
 		user.setSchemaExtensions(schema);
 		Meta meta = user.getMeta();
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
-		meta.setLocation(ScimConstants.URI+ScimConstants.USER_RESOURCE_TYPE);
+		meta.setLocation(ScimConstants.URI+ScimConstants.RESOURCE_TYPE+
+				ScimConstants.URI_DELIM+ScimConstants.USER_RESOURCE_TYPE);
 		return user;
+	}
+	
+	/**
+	 * get ScimUser From Json String
+	 * @param input
+	 * @return
+	 */
+	public static Object parseFromJson(String input, Class<?> objClass){
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			return mapper.readValue(input, objClass);
+		} catch (JsonParseException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
+		} catch (JsonMappingException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_SYNTAX_ERROR);
+		} catch (IOException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
+		}
 	}
 }

@@ -5,6 +5,7 @@ package scim.ldap;
 
 import java.util.List;
 
+import scim.entity.PatchOp;
 import scim.entity.ScimUser;
 
 /**
@@ -58,11 +59,11 @@ public interface UserService {
 	ScimUser replaceUser(String id, ScimUser user);
 
 	/**
-	 * updateUser
+	 * patchUser
 	 * @param id
-	 * @param user
-	 * @return
+	 * @param patchOp
+	 * @return updated User
 	 */
-	ScimUser updateUser(String id, ScimUser user);
+	ScimUser patchUser(String id, PatchOp patchOp);
 
 }

@@ -1,25 +1,76 @@
-package scim.entity;
 /**
  * 
+ */
+package scim.entity;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import scim.util.ScimConstants;
+
+/**
  * @author AkshathaKadri
  *
  */
+@JsonPropertyOrder({ "schemas", "Operations" })
 public class PatchOp {
-
-	private String op;
-	private Object value;
+	@JsonProperty("schemas")
+	private Set<String> schemas;
 	
-	public String getOp() {
-		return op;
+	@JsonProperty("Operations")
+	private List<PatchOperation> Operations;
+
+	
+	/**
+	 * 
+	 */
+	public PatchOp() {
+		schemas = new HashSet<>();
+		schemas.add(ScimConstants.SCHEMA_PATCH);
+		Operations = new ArrayList<PatchOperation>();
 	}
-	public void setOp(String op) {
-		this.op = op;
+
+	/**
+	 * @return the schemas
+	 */
+	public Set<String> getSchemas() {
+		return schemas;
 	}
-	public Object getValue() {
-		return value;
+
+	/**
+	 * @param schemas the schemas to set
+	 */
+	public void setSchemas(Set<String> schemas) {
+		this.schemas = schemas;
 	}
-	public void setValue(Object value) {
-		this.value = value;
+
+
+	/**
+	 * @return the operations
+	 */
+	public List<PatchOperation> getOperations() {
+		return Operations;
 	}
+
+	/**
+	 * @param operations the operations to set
+	 */
+	public void setOperations(List<PatchOperation> operations) {
+		Operations = operations;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "PatchOp [schemas=" + schemas + ", operations=" + Operations + "]";
+	}
+	
 	
 }

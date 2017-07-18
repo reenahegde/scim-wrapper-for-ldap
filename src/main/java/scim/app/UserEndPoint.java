@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import scim.entity.PatchOp;
 import scim.entity.ScimUser;
 import scim.error.ScimBadRequest;
 import scim.error.ScimResourseNotFound;
@@ -135,17 +136,44 @@ public class UserEndPoint {
 	 * PATCH User
 	 * @param id
 	 * @param response
+	 * EG:
+	  {
+	     "schemas":
+	       ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+	     "Operations":[{
+	       "op":"add",
+	       "value":{
+	         "emails":[
+	           {
+	             "value":"babs@jensen.org",
+	             "type":"home"
+	           }
+	         ],
+	         "nickname":"Babs"
+	     }]
+	   }
 	 */
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping(value = "/Users/{id}", method = RequestMethod.PATCH)
 	public ScimUser patchUser(@PathVariable("id") String id, @RequestParam(value="user") String input) {
-		ScimUser user = getUserFromJson(input);
-		ScimUser updateUser = userService.updateUser(id, user);
+		PatchOp patch = null;
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			patch= mapper.readValue(input, PatchOp.class);
+		} catch (JsonParseException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
+		} catch (JsonMappingException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_SYNTAX_ERROR);
+		} catch (IOException e) {
+			throw new ScimBadRequest(ScimErrorConstants.REQ_PARSE_ERROR);
+		}
+		ScimUser updateUser = userService.patchUser(id, patch);
 		if(updateUser!=null){
-			logger.info(user+" Updated");
+			logger.info("User with id:"+id+" Updated");
+			logger.debug(updateUser.toString());
 			return updateUser;
 		} else {
-			throw new ScimResourseNotFound(user.getId());
+			throw new ScimResourseNotFound(id);
 		}
 	}
 
