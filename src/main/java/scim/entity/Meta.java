@@ -2,11 +2,14 @@ package scim.entity;
 
 import java.util.Calendar;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import scim.util.ScimConstants;
 
 @JsonPropertyOrder({ "resourceType", "created" , "lastModified", "location", "version"})
+@JsonInclude(Include.NON_NULL)
 public class Meta {
 
 	private String resourceType;
@@ -23,6 +26,9 @@ public class Meta {
 		created = Calendar.getInstance().getTime().toString();
 		lastModified =  created;
 		version = ScimConstants.VERSION;
+	}
+	
+	public Meta(boolean isSchema){
 	}
 	
 	public String getResourceType() {

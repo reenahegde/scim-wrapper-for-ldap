@@ -14,6 +14,8 @@ import com.novell.ldap.LDAPModification;
 import scim.entity.Meta;
 import scim.entity.MultiValuedEntity;
 import scim.entity.Name;
+import scim.entity.ResourceType;
+import scim.entity.Schema;
 import scim.entity.ScimUser;
 
 public class ScimUtils {
@@ -382,5 +384,22 @@ public class ScimUtils {
 
 	public static String getDNFromId(String id){
 		return getDNFromExternalId(id.split(ScimConstants.ID_BUFFER)[1]); 
+	}
+	
+	public static ResourceType getUserResource(){
+		ResourceType user = new ResourceType();
+		user.setId(ScimConstants.USER_RESOURCE_TYPE);
+		user.setName(ScimConstants.USER_RESOURCE_TYPE);
+		user.setEndpoint(ScimConstants.URI_DELIM+ScimConstants.USER_RESOURCE_TYPE);
+		user.setDescription(ScimConstants.USER_DESC);
+		user.setSchema(ScimConstants.SCHEMA_USER);
+		Schema schema = new Schema();
+		schema.setRequired(false);
+		schema.setSchema(ScimConstants.SCHEMA_ENT_USER);
+		user.setSchemaExtensions(schema);
+		Meta meta = user.getMeta();
+		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
+		meta.setLocation(ScimConstants.URI+ScimConstants.USER_RESOURCE_TYPE);
+		return user;
 	}
 }

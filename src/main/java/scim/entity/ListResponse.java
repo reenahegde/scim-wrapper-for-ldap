@@ -1,9 +1,11 @@
 package scim.entity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import scim.util.ScimConstants;
 
@@ -11,13 +13,14 @@ import scim.util.ScimConstants;
  * @author AkshathaKadri
  *
  */
+@JsonPropertyOrder({ "schemas", "totalResults", "itemsPerPage", "startIndex", "Resources" })
 public class ListResponse {
 	@JsonProperty("schemas")
 	protected Set<String> schemas;
 	private int totalResults;
 	private int itemsPerPage;
 	private int startIndex;
-	private Set<Object> Resources;
+	private ArrayList<Object> Resources;
 	
 	public ListResponse() {
 		schemas = new HashSet<>();
@@ -75,13 +78,13 @@ public class ListResponse {
 	/**
 	 * @return the resources
 	 */
-	public Set<Object> getResources() {
+	public ArrayList<Object> getResources() {
 		return Resources;
 	}
 	/**
 	 * @param resources the resources to set
 	 */
-	public void setResources(Set<Object> resources) {
+	public void setResources(ArrayList<Object> resources) {
 		Resources = resources;
 	}
 	
