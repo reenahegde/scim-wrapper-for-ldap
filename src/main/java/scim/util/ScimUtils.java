@@ -90,7 +90,7 @@ public class ScimUtils {
 			meta.setLastModified("");
 		}
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
-		meta.setLocation(ScimConstants.USER_URI+user.getId());
+		meta.setLocation(ScimConstants.URI+ScimConstants.USER_PATH+user.getId());
 		user.setMeta(meta);
 		return user;
 	}
@@ -293,7 +293,8 @@ public class ScimUtils {
 		}
 
 		Meta meta = oldUser.getMeta();
-		meta.setLocation(ScimConstants.USER_URI+oldUser.getId());
+		//TODO: test URI
+		meta.setLocation(ScimConstants.URI+ScimConstants.USER_PATH+oldUser.getId());
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
 		Integer version = Integer.parseInt(meta.getVersion())+1;
 		meta.setVersion(version.toString());
@@ -352,7 +353,7 @@ public class ScimUtils {
 		}
 
 		Meta meta = user.getMeta();
-		meta.setLocation(ScimConstants.USER_URI+user.getId());
+		meta.setLocation(ScimConstants.URI+ScimConstants.USER_PATH+user.getId());
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
 		Integer version = Integer.parseInt(meta.getVersion())+1;
 		meta.setVersion(version.toString());

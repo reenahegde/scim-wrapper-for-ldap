@@ -1,7 +1,7 @@
 /**
  * 
  */
-package scim.error;
+package scim.entity;
 
 import java.util.HashSet;
 import java.util.Set;

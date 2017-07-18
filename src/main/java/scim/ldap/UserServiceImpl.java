@@ -21,14 +21,6 @@ import scim.util.ScimUtils;
 import scim.util.ScimUtils.Mutability;
 @Repository
 public class UserServiceImpl implements UserService {
-	 String ldapHost = "192.168.1.11";
-	// String ldapHost = "10.0.8.54";
-
-	 int ldapPort 		= LDAPConnection.DEFAULT_PORT;
-	 String scope 		= ScimConstants.USER_CONTAINER;
-	 String loginDN       = "cn=admin,ou=services,o=system";
-	 String password      = "abcd1234";
-	 String containerName = "o=people";
 
 	//private final static AtomicLong counter = new AtomicLong();
 	public static void main(String[] args)	{
@@ -42,7 +34,7 @@ public class UserServiceImpl implements UserService {
 		LDAPConnection lc = SSL_Connection.getConnection();
 		try {
 			System.out.println("Ldap connection successful, Search: "+search);
-			LDAPSearchResults searchResults = lc.search(scope, 
+			LDAPSearchResults searchResults = lc.search(ScimConstants.USER_CONTAINER, 
 					LDAPConnection.SCOPE_SUB, search, null, false);
 			List<ScimUser> userRet = new ArrayList<>();
 			int i=0;
@@ -80,7 +72,7 @@ public class UserServiceImpl implements UserService {
 		LDAPConnection lc = SSL_Connection.getConnection();
 		try {
 			System.out.println("Ldap connection successful, Searching "+query+"="+value);
-			LDAPSearchResults searchResults = lc.search(scope, 
+			LDAPSearchResults searchResults = lc.search(ScimConstants.USER_CONTAINER, 
 					LDAPConnection.SCOPE_SUB, "("+query+"="+value+")", null, false);
 
 			if (searchResults.hasMore()) {
@@ -102,7 +94,7 @@ public class UserServiceImpl implements UserService {
 	public  ScimUser addUser(ScimUser user) {
 		user.setId(ScimUtils.generateIdForUser(user.getExternalId()));
 		Meta meta = user.getMeta();
-		String location = ScimConstants.USER_URI+user.getId();
+		String location = ScimConstants.URI+ScimConstants.USER_PATH+user.getId();
 		meta.setLocation(location);
 		meta.setResourceType(ScimConstants.USER_RESOURCE_TYPE);
 		meta.setVersion(ScimConstants.VERSION);

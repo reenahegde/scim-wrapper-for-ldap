@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import scim.entity.ScimErrorResponse;
 import scim.error.ScimBaseException;
-import scim.error.ScimErrorResponse;
 
 /**
  * 
